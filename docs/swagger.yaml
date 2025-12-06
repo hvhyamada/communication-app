@@ -1,0 +1,212 @@
+openapi: 3.0.0
+info:
+  title: WhatToCook API
+  version: 1.0.0
+  description: >
+    API для веб-сайту "Що приготувати?".
+    Містить базу рецептів, фільтрацію, пошук за інгредієнтами
+    та детальну інформацію про кожен рецепт.
+
+servers:
+  - url: https://api.whattocook.com
+    description: Основний сервер API
+
+paths:
+
+  /recipes:
+    get:
+      summary: Отримати список усіх рецептів
+      tags: [Recipes]
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Скільки рецептів повернути
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Зміщення для пагінації
+      responses:
+        '200':
+          description: Список рецептів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeShort'
+
+    post:
+      summary: Додати новий рецепт
+      tags: [Recipes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreate'
+      responses:
+        '201':
+          description: Рецепт успішно створено
+
+  /recipes/{id}:
+    get:
+      summary: Отримати деталі рецепта
+      tags: [Recipes]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Детальний рецепт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          description: Рецепт не знайдено
+
+    delete:
+      summary: Видалити рецепт
+      tags: [Recipes]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Видалено
+
+  /search:
+    get:
+      summary: Пошук рецептів за інгредієнтами
+      tags: [Search]
+      parameters:
+        - in: query
+          name: ingredients
+          required: true
+          schema:
+            type: string
+          example: "яйце, молоко, цукор"
+          description: Список інгредієнтів через кому
+      responses:
+        '200':
+          description: Рецепти, які можна приготувати з цих інгредієнтів
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeShort'
+
+  /ingredients:
+    get:
+      summary: Отримати список інгредієнтів
+      tags: [Ingredients]
+      responses:
+        '200':
+          description: Всі інгредієнти
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+
+components:
+  schemas:
+
+    RecipeShort:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        name:
+          type: string
+          example: "Млинці"
+        time:
+          type: integer
+          example: 15
+        difficulty:
+          type: string
+          example: "easy"
+
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          example: "Омлет класичний"
+        description:
+          type: string
+          example: "Легкий рецепт омлету за 5 хвилин."
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+        steps:
+          type: array
+          items:
+            type: string
+          example:
+            - "Змішати яйця та молоко"
+            - "Приправити"
+            - "Смажити на середньому вогні"
+        time:
+          type: integer
+          example: 10
+        difficulty:
+          type: string
+          example: "easy"
+
+    RecipeCreate:
+      type: object
+      required:
+        - name
+        - ingredients
+        - steps
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/IngredientCreate'
+        steps:
+          type: array
+          items:
+            type: string
+        time:
+          type: integer
+        difficulty:
+          type: string
+
+    Ingredient:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Яйце"
+        amount:
+          type: string
+          example: "2 шт"
+
+    IngredientCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: string
